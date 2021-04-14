@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class TetrisBlock : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class TetrisBlock : MonoBehaviour
     public static int height;
     public static int width;
     public Vector3 rotationPoint;
+    public AudioSource[] sounds;
 
     private static Transform[,] BlockGrid = new Transform[width, height];
     private GameObject gmWorldGrid;
@@ -25,7 +27,10 @@ public class TetrisBlock : MonoBehaviour
         height = wgScript.GetHeight();
         width = wgScript.GetWidth();
 
-        StartCoroutine(LoadLetters());
+        
+        StartCoroutine(LoadLetters(bool.Parse(PlayerPrefs.GetString("Classic", "false"))));
+        sounds[0].playOnAwake = false;
+        sounds[1].playOnAwake = false;
     }
 
     // Update is called once per frame
@@ -53,10 +58,12 @@ public class TetrisBlock : MonoBehaviour
             //If rotation block goes out of bounds, revert rotation.
             else if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
             {
+                sounds[1].Play();
                 transform.RotateAround(transform.TransformPoint(rotationPoint), new Vector3(0, 0, 1), 90);
-                foreach(Transform child in transform)
+                foreach (Transform child in transform)
                 {
-                    child.gameObject.transform.GetChild(0).transform.rotation = Quaternion.Euler(0f, 0f, gameObject.transform.rotation.z * -1f);
+                    if(child.name.Contains("Square"))
+                        child.gameObject.transform.GetChild(0).transform.rotation = Quaternion.Euler(0f, 0f, gameObject.transform.rotation.z * -1f);
                 }
                 
                 if (!ValidMove())
@@ -64,7 +71,8 @@ public class TetrisBlock : MonoBehaviour
                     transform.RotateAround(transform.TransformPoint(rotationPoint), new Vector3(0, 0, 1), -90);
                     foreach (Transform child in transform)
                     {
-                        child.gameObject.transform.GetChild(0).transform.rotation = Quaternion.Euler(0f, 0f, gameObject.transform.rotation.z * -1f);
+                        if (child.name.Contains("Square"))
+                            child.gameObject.transform.GetChild(0).transform.rotation = Quaternion.Euler(0f, 0f, gameObject.transform.rotation.z * -1f);
                     }
                 }
             }
@@ -91,6 +99,7 @@ public class TetrisBlock : MonoBehaviour
                     transform.position -= new Vector3(0, -1, 0);
                     if(wgScript.AddToGrid(this.gameObject))
                     {
+                        sounds[0].Play();
                         wgScript.CheckForLines();
                         wgScript.CheckForWords();
                         wgScript.InitAnimateAndDelete();
@@ -123,15 +132,18 @@ public class TetrisBlock : MonoBehaviour
     {
         foreach (Transform child in transform)
         {
-            int roundedX = Mathf.RoundToInt((child.transform.position.x));
-            int roundedY = Mathf.RoundToInt((child.transform.position.y));
-
-            if (roundedX < 0 || roundedX >= width || roundedY < 0 || roundedY >= height)
-                return false;
-
-            if (BlockGrid[roundedX, roundedY] != null)
+            if (child.name.Contains("Square"))
             {
-                return false;
+                int roundedX = Mathf.RoundToInt((child.transform.position.x));
+                int roundedY = Mathf.RoundToInt((child.transform.position.y));
+
+                if (roundedX < 0 || roundedX >= width || roundedY < 0 || roundedY >= height)
+                    return false;
+
+                if (BlockGrid[roundedX, roundedY] != null)
+                {
+                    return false;
+                }
             }
         }
 
@@ -139,18 +151,32 @@ public class TetrisBlock : MonoBehaviour
     }
 
     //Load Letters foreach newly spawned tetromino block
-    IEnumerator LoadLetters()
+    IEnumerator LoadLetters(bool isClassic)
     {
         WaitForSeconds wait = new WaitForSeconds((float)0.0005);
         yield return wait;
 
-        char[] loader = FindObjectOfType<WordLoader>().GetThemedSequence();
-
-        int counter = 0;
-        foreach (Transform child in transform)
+        if(isClassic)
         {
-            child.gameObject.transform.GetChild(0).GetComponent<TextMesh>().text = loader[counter].ToString();
-            counter++;
+            foreach (Transform child in transform)
+            {
+                if (child.name.Contains("Square"))
+                    child.gameObject.transform.GetChild(0).GetComponent<TextMesh>().text = "";
+            }
+        }
+        else
+        {
+            char[] loader = FindObjectOfType<WordLoader>().GetThemedSequence();
+
+            int counter = 0;
+            foreach (Transform child in transform)
+            {
+                if (child.name.Contains("Square"))
+                {
+                    child.gameObject.transform.GetChild(0).GetComponent<TextMesh>().text = loader[counter].ToString();
+                    counter++;
+                }
+            }
         }
     }
 

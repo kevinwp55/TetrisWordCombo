@@ -24,7 +24,7 @@ public class TimerMgn : MonoBehaviour
         int minute = second / 60;
         int hour = minute / 60;
 
-        timeDisplayed.text = LeadingZero(hour) + " : " + LeadingZero(minute) + " : " + LeadingZero(second % 60);
+        timeDisplayed.text = LeadingZero(hour) + ":" + LeadingZero(minute) + ":" + LeadingZero(second % 60);
     }
 
     string LeadingZero(int n)

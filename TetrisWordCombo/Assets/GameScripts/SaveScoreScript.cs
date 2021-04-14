@@ -38,6 +38,7 @@ public class SaveScoreScript : MonoBehaviour
         {
             conc_name += child.text;
         }
+        conc_name = conc_name.ToUpper();
         return conc_name;
     }
 }

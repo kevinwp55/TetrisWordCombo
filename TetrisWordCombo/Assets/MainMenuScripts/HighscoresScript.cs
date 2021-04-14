@@ -12,8 +12,10 @@ public class HighscoresScript : MonoBehaviour
     public InputField searchText;
     public Button SearchB;
     public Button RefreshB;
+    public Text SearchErrorText;
 
     List<GameObject> prefabs;
+    List<Stats> highscores;
     DBManager dbHandler;
     private static int max = 50;
 
@@ -22,8 +24,12 @@ public class HighscoresScript : MonoBehaviour
     {
         prefabs = new List<GameObject>();
         dbHandler = FindObjectOfType<DBManager>();
+        highscores = new List<Stats>();
+        highscores = dbHandler.GetHighscores();
+        highscores = highscores.OrderBy(x => int.Parse(x.score)).ToList();
+        highscores.Reverse();
 
-        FillHighScores();
+        FillHighScores(null);
     }
 
     // Update is called once per frame
@@ -40,36 +46,85 @@ public class HighscoresScript : MonoBehaviour
         }
     }
 
-    void FillHighScores()
+    void FillHighScores(string name)
     {
-        List<Stats> highscores = new List<Stats>();
-        highscores = dbHandler.GetHighscores();
-        highscores = highscores.OrderBy(x => int.Parse(x.score)).ToList();
-        highscores.Reverse();
-        
+        ClearAllFromView();
+        List<Stats> filteredList = new List<Stats>();
+        if (name != null)
+        {
+            foreach (Stats child in highscores)
+            {
+                if (child.username == name)
+                    filteredList.Add(child);
+            }
+        }
+        else
+            filteredList = highscores;
+
         for(int i=0; i<max; i++)
         {
-            if (i >= highscores.Count)
+            if (i >= filteredList.Count)
                 break;
-            if (highscores.Count == 0)
+            if (filteredList.Count == 0)
                 break;
             GameObject newPrefab = Instantiate(HighscoresPrefab);
-            newPrefab.transform.Find("RankText").GetComponent<Text>().text = (i+1).ToString();
-            newPrefab.transform.Find("NameText").GetComponent<Text>().text = highscores[i].username;
-            newPrefab.transform.Find("ScoreText").GetComponent<Text>().text = highscores[i].score;
-            newPrefab.transform.Find("LevelText").GetComponent<Text>().text = highscores[i].level;
-            newPrefab.transform.Find("WordsText").GetComponent<Text>().text = highscores[i].words;
-            /*
-            foreach(string word in highscores[i].wordlist)
+            if(newPrefab.transform.Find("RankText").GetComponent<Text>().text == "0")
             {
-                GameObject WordPrefab = Instantiate(WordsListPrefab);
-                WordPrefab.transform.GetChild(0).GetComponent<Text>().text = word;
-                WordPrefab.transform.SetParent(newPrefab.transform.Find("WordList").transform.Find("Content").GetComponent<RectTransform>().transform);
-            }*/
-            newPrefab.transform.Find("TimeText").GetComponent<Text>().text = highscores[i].playtime;
-            newPrefab.transform.Find("DateText").GetComponent<Text>().text = highscores[i].date;
-            newPrefab.transform.SetParent(contentBlock.transform);
+                newPrefab.transform.Find("RankText").GetComponent<Text>().text = (i + 1).ToString();
+            }
+            newPrefab.transform.Find("NameText").GetComponent<Text>().text = filteredList[i].username;
+            newPrefab.transform.Find("ScoreText").GetComponent<Text>().text = filteredList[i].score;
+            newPrefab.transform.Find("LevelText").GetComponent<Text>().text = filteredList[i].level;
+            newPrefab.transform.Find("WordsText").GetComponent<Text>().text = filteredList[i].words;
+            Dropdown prefabDropdown = newPrefab.transform.Find("WordListDropdown").GetComponent<Dropdown>();
+            FillDropdown(prefabDropdown, filteredList[i].wordlist);
+            newPrefab.transform.Find("TimeText").GetComponent<Text>().text = filteredList[i].playtime;
+            newPrefab.transform.Find("DateText").GetComponent<Text>().text = filteredList[i].date;
+            newPrefab.transform.SetParent(contentBlock.transform, false);
             prefabs.Add(newPrefab);
         }
     }
+
+    void FillDropdown(Dropdown drop, List<string> words)
+    {
+        drop.ClearOptions();
+        drop.AddOptions(words);
+        drop.RefreshShownValue();
+    }
+
+    #region Search User
+
+    public void SearchButton()
+    {
+        string search = searchText.text;
+        search = search.ToUpper();
+        if (CheckIfValidEntry())
+            FillHighScores(search);
+        else
+        {
+            SearchErrorText.text = "Invalid username";
+            StartCoroutine(ClearSearchErrorText());
+        }
+    }
+
+    bool CheckIfValidEntry()
+    {
+        if (!(searchText.text.Length == 5))
+            return false;
+        return true;
+    }
+
+    IEnumerator ClearSearchErrorText()
+    {
+        WaitForSeconds wait = new WaitForSeconds(3);
+        yield return wait;
+        SearchErrorText.text = "";
+    }
+
+    public void RefreshButton()
+    {
+        FillHighScores(null);
+    }
+
+    #endregion
 }

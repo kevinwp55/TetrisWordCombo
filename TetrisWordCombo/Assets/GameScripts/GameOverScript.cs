@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Audio;
 
 public class GameOverScript : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class GameOverScript : MonoBehaviour
     public GameObject WordsPanelContents;
     public GameObject ContentPrefab;
     public Button SaveScoreButton;
+    public AudioMixer AudioParams;
+    public AudioSource GameOverSound;
 
     public Text SaveScoreSuccessText;
     public Text PlayerScore;
@@ -24,6 +27,7 @@ public class GameOverScript : MonoBehaviour
     private string NameInputError = "Invalid name, empty input or inappropriate name...";
     private string ConnectionError = "Score could not be saved due to connection error...";
     private string SaveScoreSuccess = "Score successfully saved!";
+    private float UnpausedVolume;
 
     // Start is called before the first frame update
     void Start()
@@ -43,6 +47,10 @@ public class GameOverScript : MonoBehaviour
         Time.timeScale = 0;
         GameOverPanel.SetActive(true);
         GameOver = true;
+        AudioParams.GetFloat("MusicParam", out UnpausedVolume);
+        GameOverSound.Play();
+        if (!(UnpausedVolume <= -30.0))
+            AudioParams.SetFloat("MusicParam", (float)-30.0);
         DisplayPlayerStats();
     }
 
@@ -50,6 +58,7 @@ public class GameOverScript : MonoBehaviour
     {
         Time.timeScale = 1;
         GameOverPanel.SetActive(false);
+        AudioParams.SetFloat("MusicParam", UnpausedVolume);
         GameOver = false;
     }
 

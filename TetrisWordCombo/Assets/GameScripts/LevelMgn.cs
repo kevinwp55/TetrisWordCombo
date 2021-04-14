@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Audio;
 
 public class LevelMgn : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class LevelMgn : MonoBehaviour
 
     public Text PlayerCurrentLevel;
     public Text LevelUpText;
+    public AudioSource levelUpSound;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -60,6 +63,7 @@ public class LevelMgn : MonoBehaviour
         {
             CurrentLevel += 1;
             ifLevelUp = false;
+            levelUpSound.Play();
             StartCoroutine(AnimateLevelUpText());
         }
     }

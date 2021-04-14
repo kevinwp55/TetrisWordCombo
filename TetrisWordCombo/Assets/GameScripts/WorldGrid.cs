@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 class Block
 {
@@ -25,6 +26,8 @@ struct BlockCoord
 
 public class WorldGrid : MonoBehaviour
 {
+    public AudioSource ClearBlockSound;
+
     private static Transform[,] Grid;
     private static Block[,] LetterGrid;
 
@@ -66,17 +69,20 @@ public class WorldGrid : MonoBehaviour
     {
         foreach (Transform child in tetromino.transform)
         {
-            int roundedX = Mathf.RoundToInt((child.transform.position.x));
-            int roundedY = Mathf.RoundToInt((child.transform.position.y));
-            try
+            if (child.name.Contains("Square"))
             {
-                Grid[roundedX, roundedY] = child;
-                LetterGrid[roundedX, roundedY] = new Block(child.GetComponent<SpriteRenderer>().gameObject.transform.GetChild(0).GetComponent<TextMesh>().text);
-            }
-            catch(System.IndexOutOfRangeException)
-            {
-                return false;
-            }            
+                int roundedX = Mathf.RoundToInt((child.transform.position.x));
+                int roundedY = Mathf.RoundToInt((child.transform.position.y));
+                try
+                {
+                    Grid[roundedX, roundedY] = child;
+                    LetterGrid[roundedX, roundedY] = new Block(child.GetComponent<SpriteRenderer>().gameObject.transform.GetChild(0).GetComponent<TextMesh>().text);
+                }
+                catch (System.IndexOutOfRangeException)
+                {
+                    return false;
+                }
+            } 
         }
         //PrintLetterGrid();
         return true;
@@ -279,6 +285,7 @@ public class WorldGrid : MonoBehaviour
         WaitForSeconds ColorSwapTime = new WaitForSeconds((float)0.075);
         float maxTime = 1.0f;
         float timer = 0.0f;
+        ClearBlockSound.Play();
         while (timer < maxTime)
         {
             Grid[x, y].GetComponent<SpriteRenderer>().color = Color.white;

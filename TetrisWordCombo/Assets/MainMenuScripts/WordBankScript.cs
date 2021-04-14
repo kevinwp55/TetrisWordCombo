@@ -62,7 +62,7 @@ public class WordBankScript : MonoBehaviour
             {
                 GameObject newPrefab = Instantiate(prefab);
                 newPrefab.transform.GetChild(0).GetComponent<Text>().text = AllWords[LetterSizeSelect.value + 3][i];
-                newPrefab.transform.SetParent(content.transform);
+                newPrefab.transform.SetParent(content.transform, false);
                 prefabs.Add(newPrefab);
             }
         }

@@ -33,7 +33,7 @@ public class WordScoreMgn : MonoBehaviour
 
         GameObject newPrefab = Instantiate(textPrefab);
         newPrefab.transform.GetChild(0).GetComponent<Text>().text = word;
-        newPrefab.transform.SetParent(wordPanel.transform);
+        newPrefab.transform.SetParent(wordPanel.transform, false);
         contents.Enqueue(newPrefab);
 
         StartCoroutine(AnimateNewEnqueue(newPrefab));
